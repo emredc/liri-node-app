@@ -18,7 +18,9 @@ database: "bamazon"
 
 connection.connect(function (err) {
     if (err) throw err;
-    console.log("connected!")
+    console.log("connected!");
+customerChoice();
+    
 
 });
 
@@ -30,49 +32,44 @@ console.log(res[i].item_id + "|" + res[i].product_name + "|"+ res[i].department_
 }
 });
 
-customerChoice();
 
 function customerChoice() {
-
-connection.query("SELECT * FROM products"), function (err, res){
-if (err) throw err;
 
 inquirer
 .prompt([{
             message: "What would you like to purchase? ",
             type: "input",
             name: "item",
-            validate: function (value) {
-            if (isNaN(value) === false) {
-              return true;
-            }
-            return false;
-          }
+            // validate: function (value) {
+            // if (isNaN(value) === false) {
+              // return true;
+            // }
+            // return false;
+          // }
         },
         {
             message: "How many units you would like to purchase from this item?",
             type: "input",
-            name: "units",
-            validate: function (value) {
-            if (isNaN(value) === false) {
-              return true;
-            }
-            return false;
-          }
+            name: "quantity",
+            // validate: function (value) {
+            // if (isNaN(value) === false) {
+              // return true;
+            // }
+            // return false;
+          // }
         }
          ])
-     
-
     .then(function(answer) {
+      connection.query("SELECT * FROM products", function (err, results){
+if (err) throw err;
+// console.log(results);
         // get the information of the chosen item
         var chosenItem;
         for (var i = 0; i < results.length; i++) {
-          if (results[i].item_name === answer.choice) {
+          if (results[i].item_id == answer.item) {
             chosenItem = results[i];
           }
         }
-
-        
         if (chosenItem.stock_quantity > parseInt(answer.quantity)) {
           var recentStock = chosenItem.stock_quantity - answer.quantity
           connection.query(
@@ -81,9 +78,9 @@ inquirer
               {
                 stock_quantity: recentStock
               },
-              {
-                id: chosenItem.id
-              }
+              
+                answer.item == chosenItem.item_id
+              
             ],
             function(error) {
               if (error) throw err;
@@ -92,11 +89,15 @@ inquirer
             }
           );
         }
-        else {
-          
+        else { 
           console.log("Item you are looking for is not in our stocks. Try again...");
           finish();
         }
-      })
-    }
-};
+      // });
+    });
+  });
+}
+
+function finish(){
+  connection.end();
+}
